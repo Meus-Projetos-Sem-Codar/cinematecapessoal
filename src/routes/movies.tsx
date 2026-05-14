@@ -39,6 +39,7 @@ function MoviesPage() {
   const { movies, add, update, remove, toggleWatched } = useMovies();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("all");
+  const [watchedFilter, setWatchedFilter] = useState<"all" | "watched" | "unwatched">("all");
   const [editing, setEditing] = useState<Movie | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -47,9 +48,12 @@ function MoviesPage() {
     return movies.filter((m) => {
       const okTitle = m.title.toLowerCase().includes(query.toLowerCase());
       const okCat = category === "all" || m.categories.includes(category);
-      return okTitle && okCat;
+      const okWatched =
+        watchedFilter === "all" ||
+        (watchedFilter === "watched" ? m.watched : !m.watched);
+      return okTitle && okCat && okWatched;
     });
-  }, [movies, query, category]);
+  }, [movies, query, category, watchedFilter]);
 
   const watched = movies.filter((m) => m.watched).length;
 
@@ -113,6 +117,16 @@ function MoviesPage() {
                   {c}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+          <Select value={watchedFilter} onValueChange={(v) => setWatchedFilter(v as typeof watchedFilter)}>
+            <SelectTrigger className="h-11 sm:w-48">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="watched">Assistidos</SelectItem>
+              <SelectItem value="unwatched">Não assistidos</SelectItem>
             </SelectContent>
           </Select>
         </div>
