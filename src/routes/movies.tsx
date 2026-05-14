@@ -177,5 +177,3 @@ function MoviesPage() {
   );
 }
 
-// Suppress unused import warning for Badge in some bundlers
-void Badge;
