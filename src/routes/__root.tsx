@@ -72,10 +72,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
+      { title: "CineList — Sua cinemateca pessoal" },
+      { name: "description", content: "Organize sua watchlist, marque o que viu e dê suas notas." },
+      { property: "og:title", content: "CineList" },
       { property: "og:title", content: "CineList — Sua cinemateca pessoal" },
       { property: "og:description", content: "Organize sua watchlist e dê suas notas." },
       { property: "og:type", content: "website" },
