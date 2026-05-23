@@ -79,14 +79,17 @@ export function useMovies() {
   };
 
   const update = async (id: string, m: Partial<Movie>) => {
-    const patch: Record<string, unknown> = {};
-    if (m.title !== undefined) patch.title = m.title;
-    if (m.year !== undefined) patch.year = m.year;
-    if (m.poster !== undefined) patch.poster = m.poster;
-    if (m.rating !== undefined) patch.rating = m.rating;
-    if (m.categories !== undefined) patch.categories = m.categories;
-    if (m.watched !== undefined) patch.watched = m.watched;
-    await supabase.from("movies").update(patch).eq("id", id);
+    await supabase
+      .from("movies")
+      .update({
+        ...(m.title !== undefined && { title: m.title }),
+        ...(m.year !== undefined && { year: m.year }),
+        ...(m.poster !== undefined && { poster: m.poster }),
+        ...(m.rating !== undefined && { rating: m.rating }),
+        ...(m.categories !== undefined && { categories: m.categories }),
+        ...(m.watched !== undefined && { watched: m.watched }),
+      })
+      .eq("id", id);
     await refresh();
   };
 

@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,6 +45,21 @@ function MoviesPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) navigate({ to: "/" });
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (!session) navigate({ to: "/" });
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [navigate]);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    navigate({ to: "/" });
+  };
+
   const filtered = useMemo(() => {
     return movies.filter((m) => {
       const okTitle = m.title.toLowerCase().includes(query.toLowerCase());
@@ -67,7 +83,7 @@ function MoviesPage() {
             </div>
             <span className="font-display text-xl font-bold tracking-tight">CineList</span>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/" })}>
+          <Button variant="ghost" size="sm" onClick={signOut}>
             <LogOut className="mr-2 h-4 w-4" /> Sair
           </Button>
         </div>
