@@ -34,6 +34,16 @@ function AuthPage() {
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
 
+  const translateAuthError = (message: string): string => {
+    const m = message.toLowerCase();
+    if (m.includes("user already registered")) return "Este email já está cadastrado. Tente entrar.";
+    if (m.includes("invalid login credentials")) return "Email ou senha inválidos.";
+    if (m.includes("password should be at least")) return "A senha deve ter no mínimo 6 caracteres.";
+    if (m.includes("email not confirmed")) return "Confirme seu email antes de entrar (verifique sua caixa de entrada).";
+    if (m.includes("unable to validate email address")) return "Email inválido.";
+    return message;
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
@@ -52,12 +62,16 @@ function AuthPage() {
         if (error) throw error;
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao autenticar";
-      toast.error(msg);
+      const raw = err instanceof Error ? err.message : "Erro ao autenticar";
+      toast.error(translateAuthError(raw));
+      if (mode === "signup" && raw.toLowerCase().includes("user already registered")) {
+        setMode("login");
+      }
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
