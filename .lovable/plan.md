@@ -1,19 +1,24 @@
-## Adicionar filtro "Assistido / Não assistido"
+## Objetivo
 
-Na página `/movies` (`src/routes/movies.tsx`), incluir um novo filtro ao lado do filtro de categorias para alternar entre:
+Melhorar o feedback de erro na tela de autenticação (`/`) para que o usuário entenda o que aconteceu quando o cadastro ou login falha.
 
-- **Todos** (padrão)
-- **Assistidos**
-- **Não assistidos**
+## Mudanças
 
-### Implementação
+Arquivo único: `src/routes/index.tsx`
 
-- Novo state `watchedFilter: "all" | "watched" | "unwatched"` em `MoviesPage`.
-- Adicionar um `Select` (mesmo componente usado para categoria) à direita do filtro de categoria, mantendo a altura `h-11` e largura `sm:w-48` para consistência visual.
-- Estender o `useMemo` de `filtered` para aplicar a condição:
-  - `watched` → `m.watched === true`
-  - `unwatched` → `m.watched === false`
-  - `all` → sem filtro
-- Combinado com os filtros existentes (busca por título + categoria).
+1. Criar um helper `translateAuthError(message)` que mapeia mensagens comuns do Supabase para português:
+   - `User already registered` → "Este email já está cadastrado. Tente entrar."
+   - `Invalid login credentials` → "Email ou senha inválidos."
+   - `Password should be at least 6 characters` → "A senha deve ter no mínimo 6 caracteres."
+   - `Email not confirmed` → "Confirme seu email antes de entrar (verifique sua caixa de entrada)."
+   - `Unable to validate email address` → "Email inválido."
+   - fallback: devolve a própria mensagem.
 
-Sem mudanças no store, no card ou em outras telas.
+2. No `submit`, usar o helper no `toast.error`.
+
+3. Quando o erro de signup for `User already registered`, além do toast, alternar automaticamente para `mode = "login"` mantendo o email digitado, para o usuário só precisar confirmar a senha.
+
+## Fora do escopo
+
+- Não mexer em estilos, layout, banco, RLS nem em outras telas.
+- Não alterar configurações de auth (auto-confirm continua como está).
