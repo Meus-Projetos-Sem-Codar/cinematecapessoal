@@ -123,10 +123,14 @@ function AuthPage() {
             </div>
 
             <h2 className="font-display text-2xl font-semibold text-foreground">
-              {mode === "login" ? "Bem-vindo de volta" : "Criar sua conta"}
+              {mode === "login" ? "Bem-vindo de volta" : mode === "signup" ? "Criar sua conta" : "Recuperar senha"}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {mode === "login" ? "Entre para acessar sua lista." : "Comece a montar sua watchlist."}
+              {mode === "login"
+                ? "Entre para acessar sua lista."
+                : mode === "signup"
+                ? "Comece a montar sua watchlist."
+                : "Enviaremos um link para você redefinir sua senha."}
             </p>
 
             <form onSubmit={submit} className="mt-6 space-y-4">
@@ -141,38 +145,81 @@ function AuthPage() {
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  minLength={6}
-                  required
-                />
-              </div>
+              {mode !== "forgot" && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Senha</Label>
+                    {mode === "login" && (
+                      <button
+                        type="button"
+                        onClick={() => setMode("forgot")}
+                        className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        Esqueci minha senha
+                      </button>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      minLength={6}
+                      required
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <Button
                 type="submit"
                 disabled={loading}
                 className="h-11 w-full bg-primary font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition-all hover:bg-primary/90"
               >
-                {loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
+                {loading
+                  ? "Aguarde..."
+                  : mode === "login"
+                  ? "Entrar"
+                  : mode === "signup"
+                  ? "Criar conta"
+                  : "Enviar link de recuperação"}
               </Button>
             </form>
 
             <div className="mt-6 text-center text-sm text-muted-foreground">
-              {mode === "login" ? "Ainda não tem conta?" : "Já tem uma conta?"}{" "}
-              <button
-                type="button"
-                onClick={() => setMode(mode === "login" ? "signup" : "login")}
-                className="font-medium text-primary underline-offset-4 hover:underline"
-              >
-                {mode === "login" ? "Criar conta" : "Entrar"}
-              </button>
+              {mode === "forgot" ? (
+                <button
+                  type="button"
+                  onClick={() => setMode("login")}
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Voltar para o login
+                </button>
+              ) : (
+                <>
+                  {mode === "login" ? "Ainda não tem conta?" : "Já tem uma conta?"}{" "}
+                  <button
+                    type="button"
+                    onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                    className="font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    {mode === "login" ? "Criar conta" : "Entrar"}
+                  </button>
+                </>
+              )}
             </div>
+
           </div>
         </div>
       </div>
