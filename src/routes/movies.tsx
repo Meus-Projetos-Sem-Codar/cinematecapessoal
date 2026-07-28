@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Film, Plus, Search, LogOut } from "lucide-react";
+import { Film, Plus, Search, LogOut, TrendingUp } from "lucide-react";
 import { CATEGORIES, useMovies, type Movie } from "@/lib/movies-store";
 import { MovieCard } from "@/components/MovieCard";
 import { MovieFormDialog } from "@/components/MovieFormDialog";
@@ -83,9 +83,16 @@ function MoviesPage() {
             </div>
             <span className="font-display text-xl font-bold tracking-tight">CineList</span>
           </div>
-          <Button variant="ghost" size="sm" onClick={signOut}>
-            <LogOut className="mr-2 h-4 w-4" /> Sair
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/popular">
+                <TrendingUp className="mr-2 h-4 w-4" /> Populares
+              </Link>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={signOut}>
+              <LogOut className="mr-2 h-4 w-4" /> Sair
+            </Button>
+          </div>
         </div>
       </header>
 
