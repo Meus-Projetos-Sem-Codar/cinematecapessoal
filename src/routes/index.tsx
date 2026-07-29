@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Film, LogOut, Star, TrendingUp, Loader2, ListVideo, LogIn } from "lucide-react";
+import { Film, LogOut, Star, TrendingUp, Loader2, ListVideo, LogIn, Plus, Check } from "lucide-react";
 import { getPopularMovies, type PopularMovie } from "@/lib/tmdb.functions";
 
 export const Route = createFileRoute("/")({
