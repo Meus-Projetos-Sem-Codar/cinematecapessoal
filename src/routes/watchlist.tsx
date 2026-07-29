@@ -20,22 +20,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Film, Plus, Search, LogOut, TrendingUp } from "lucide-react";
+import { Film, Plus, Search, LogOut, Home } from "lucide-react";
 import { CATEGORIES, useMovies, type Movie } from "@/lib/movies-store";
 import { MovieCard } from "@/components/MovieCard";
 import { MovieFormDialog } from "@/components/MovieFormDialog";
 
-export const Route = createFileRoute("/movies")({
+export const Route = createFileRoute("/watchlist")({
   head: () => ({
     meta: [
-      { title: "Meus Filmes — CineList" },
-      { name: "description", content: "Sua coleção pessoal de filmes." },
+      { title: "Minha Watchlist — CineList" },
+      { name: "description", content: "Sua coleção pessoal de filmes para assistir." },
+      { property: "og:title", content: "Minha Watchlist — CineList" },
+      { property: "og:description", content: "Sua coleção pessoal de filmes para assistir." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: MoviesPage,
+  component: WatchlistPage,
 });
 
-function MoviesPage() {
+function WatchlistPage() {
   const navigate = useNavigate();
   const { movies, add, update, remove, toggleWatched } = useMovies();
   const [query, setQuery] = useState("");
@@ -47,10 +51,10 @@ function MoviesPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) navigate({ to: "/" });
+      if (!data.session) navigate({ to: "/auth" });
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (!session) navigate({ to: "/" });
+      if (!session) navigate({ to: "/auth" });
     });
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
@@ -77,16 +81,16 @@ function MoviesPage() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
-          <div className="flex items-center gap-2.5">
+          <Link to="/" className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Film className="h-5 w-5" />
             </div>
             <span className="font-display text-xl font-bold tracking-tight">CineList</span>
-          </div>
+          </Link>
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" size="sm">
-              <Link to="/popular">
-                <TrendingUp className="mr-2 h-4 w-4" /> Populares
+              <Link to="/">
+                <Home className="mr-2 h-4 w-4" /> Início
               </Link>
             </Button>
             <Button variant="ghost" size="sm" onClick={signOut}>
@@ -101,7 +105,7 @@ function MoviesPage() {
           <div>
             <p className="mb-2 text-xs uppercase tracking-[0.25em] text-primary">Sua coleção</p>
             <h1 className="font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-              Meus filmes
+              Minha watchlist
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
               <span className="font-semibold text-foreground">{movies.length}</span> filmes ·{" "}
@@ -213,4 +217,3 @@ function MoviesPage() {
     </div>
   );
 }
-
