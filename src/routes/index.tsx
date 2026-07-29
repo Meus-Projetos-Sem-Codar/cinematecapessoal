@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Film, LogOut, Star, TrendingUp, Loader2, ListVideo, LogIn } from "lucide-react";
+import { Film, LogOut, Star, TrendingUp, Loader2, ListVideo, LogIn, Plus, Check } from "lucide-react";
 import { getPopularMovies, type PopularMovie } from "@/lib/tmdb.functions";
 
 export const Route = createFileRoute("/")({
@@ -125,7 +126,7 @@ function HomePage() {
           <>
             <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {movies.map((movie) => (
-                <PopularCard key={movie.id} movie={movie} />
+                <PopularCard key={movie.id} movie={movie} authed={authed} />
               ))}
             </div>
 
@@ -159,11 +160,47 @@ function HomePage() {
   );
 }
 
-function PopularCard({ movie }: { movie: PopularMovie }) {
+function PopularCard({ movie, authed }: { movie: PopularMovie; authed: boolean }) {
+  const navigate = useNavigate();
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
   const poster = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     : "https://placehold.co/500x750/1a1a1a/e85d3a?text=Sem+Poster";
   const year = movie.release_date ? movie.release_date.slice(0, 4) : "—";
+
+  const addToWatchlist = async () => {
+    if (!authed) {
+      toast.error("Entre na sua conta para salvar filmes.");
+      navigate({ to: "/auth" });
+      return;
+    }
+    setSaving(true);
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
+    if (!uid) {
+      setSaving(false);
+      toast.error("Sessão expirada. Entre novamente.");
+      return;
+    }
+    const { error } = await supabase.from("movies").insert({
+      user_id: uid,
+      title: movie.title,
+      year: Number(year) || new Date().getFullYear(),
+      poster,
+      rating: Math.round(movie.vote_average * 10) / 10,
+      categories: [],
+    });
+    setSaving(false);
+    if (error) {
+      toast.error("Não foi possível salvar o filme.");
+      return;
+    }
+    setSaved(true);
+    toast.success(`"${movie.title}" foi adicionado à sua watchlist.`);
+  };
+
 
   return (
     <div className="group relative overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-card)] transition-all hover:border-primary/50 hover:shadow-[var(--shadow-glow)]">
@@ -190,6 +227,21 @@ function PopularCard({ movie }: { movie: PopularMovie }) {
         <Badge variant="outline" className="border-border text-[10px] uppercase tracking-wider text-muted-foreground">
           {movie.vote_count.toLocaleString()} votos
         </Badge>
+        <Button
+          size="sm"
+          variant={saved ? "outline" : "default"}
+          className="w-full"
+          onClick={addToWatchlist}
+          disabled={saving || saved}
+        >
+          {saving ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
+          ) : saved ? (
+            <><Check className="mr-2 h-4 w-4" /> Na watchlist</>
+          ) : (
+            <><Plus className="mr-2 h-4 w-4" /> Quero assistir</>
+          )}
+        </Button>
       </div>
     </div>
   );
