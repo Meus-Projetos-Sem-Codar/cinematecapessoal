@@ -61,7 +61,7 @@ function ResetPasswordPage() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       toast.success("Senha atualizada com sucesso!");
-      navigate({ to: "/movies" });
+      navigate({ to: "/watchlist" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao atualizar senha");
     } finally {
@@ -102,7 +102,7 @@ function ResetPasswordPage() {
                   Link inválido ou expirado. Solicite um novo link de recuperação.
                 </p>
                 <Link
-                  to="/"
+                  to="/auth"
                   className="inline-block font-medium text-primary underline-offset-4 hover:underline"
                 >
                   Voltar para o login
