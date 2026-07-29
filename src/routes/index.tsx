@@ -160,11 +160,47 @@ function HomePage() {
   );
 }
 
-function PopularCard({ movie }: { movie: PopularMovie }) {
+function PopularCard({ movie, authed }: { movie: PopularMovie; authed: boolean }) {
+  const navigate = useNavigate();
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
   const poster = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     : "https://placehold.co/500x750/1a1a1a/e85d3a?text=Sem+Poster";
   const year = movie.release_date ? movie.release_date.slice(0, 4) : "—";
+
+  const addToWatchlist = async () => {
+    if (!authed) {
+      toast.error("Entre na sua conta para salvar filmes.");
+      navigate({ to: "/auth" });
+      return;
+    }
+    setSaving(true);
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
+    if (!uid) {
+      setSaving(false);
+      toast.error("Sessão expirada. Entre novamente.");
+      return;
+    }
+    const { error } = await supabase.from("movies").insert({
+      user_id: uid,
+      title: movie.title,
+      year: Number(year) || new Date().getFullYear(),
+      poster,
+      rating: Math.round(movie.vote_average * 10) / 10,
+      categories: [],
+    });
+    setSaving(false);
+    if (error) {
+      toast.error("Não foi possível salvar o filme.");
+      return;
+    }
+    setSaved(true);
+    toast.success(`"${movie.title}" foi adicionado à sua watchlist.`);
+  };
+
 
   return (
     <div className="group relative overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-card)] transition-all hover:border-primary/50 hover:shadow-[var(--shadow-glow)]">
