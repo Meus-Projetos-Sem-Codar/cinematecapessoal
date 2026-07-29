@@ -5,8 +5,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Film, LogOut, Star, TrendingUp, Loader2, ListVideo, LogIn, Plus, Check } from "lucide-react";
+import { Film, LogOut, Star, TrendingUp, Loader2, ListVideo, LogIn, Info } from "lucide-react";
 import { getPopularMovies, type PopularMovie } from "@/lib/tmdb.functions";
+import { MovieDetailsDialog } from "@/components/MovieDetailsDialog";
 
 export const Route = createFileRoute("/")({
   head: () => ({
