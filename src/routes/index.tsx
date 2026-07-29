@@ -5,8 +5,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Film, LogOut, Star, TrendingUp, Loader2, ListVideo, LogIn, Plus, Check } from "lucide-react";
+import { Film, LogOut, Star, TrendingUp, Loader2, ListVideo, LogIn, Info } from "lucide-react";
 import { getPopularMovies, type PopularMovie } from "@/lib/tmdb.functions";
+import { MovieDetailsDialog } from "@/components/MovieDetailsDialog";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -164,6 +165,7 @@ function PopularCard({ movie, authed }: { movie: PopularMovie; authed: boolean }
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const poster = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
@@ -216,6 +218,11 @@ function PopularCard({ movie, authed }: { movie: PopularMovie; authed: boolean }
           <Star className="h-3 w-3 fill-primary text-primary" />
           {movie.vote_average.toFixed(1)}
         </div>
+        <div className="absolute inset-x-3 bottom-3 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+          <Button size="sm" className="w-full" onClick={() => setOpen(true)}>
+            <Info className="mr-2 h-4 w-4" /> Ver detalhes
+          </Button>
+        </div>
       </div>
       <div className="space-y-2 p-4">
         <div>
@@ -227,22 +234,16 @@ function PopularCard({ movie, authed }: { movie: PopularMovie; authed: boolean }
         <Badge variant="outline" className="border-border text-[10px] uppercase tracking-wider text-muted-foreground">
           {movie.vote_count.toLocaleString()} votos
         </Badge>
-        <Button
-          size="sm"
-          variant={saved ? "outline" : "default"}
-          className="w-full"
-          onClick={addToWatchlist}
-          disabled={saving || saved}
-        >
-          {saving ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
-          ) : saved ? (
-            <><Check className="mr-2 h-4 w-4" /> Na watchlist</>
-          ) : (
-            <><Plus className="mr-2 h-4 w-4" /> Quero assistir</>
-          )}
-        </Button>
       </div>
+
+      <MovieDetailsDialog
+        movieId={movie.id}
+        open={open}
+        onOpenChange={setOpen}
+        onAdd={addToWatchlist}
+        saving={saving}
+        saved={saved}
+      />
     </div>
   );
 }
