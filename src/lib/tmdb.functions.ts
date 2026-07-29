@@ -11,13 +11,23 @@ export type PopularMovie = {
   vote_count: number;
 };
 
-export const getPopularMovies = createServerFn({ method: "GET" }).handler(
-  async (): Promise<{ results: PopularMovie[] }> => {
+export type PopularMoviesResponse = {
+  results: PopularMovie[];
+  page: number;
+  total_pages: number;
+  total_results: number;
+};
+
+export const getPopularMovies = createServerFn({ method: "GET" })
+  .inputValidator((data: { page?: number } | undefined) => ({
+    page: Math.min(Math.max(Number(data?.page ?? 1) || 1, 1), 500),
+  }))
+  .handler(async ({ data }): Promise<PopularMoviesResponse> => {
     const token = process.env.TMDB_BEARER_TOKEN;
     if (!token) throw new Error("TMDB_BEARER_TOKEN não configurado");
 
     const res = await fetch(
-      "https://api.themoviedb.org/3/movie/popular?language=en-US&page=1",
+      `https://api.themoviedb.org/3/movie/popular?language=en-US&page=${data.page}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -30,7 +40,11 @@ export const getPopularMovies = createServerFn({ method: "GET" }).handler(
       throw new Error(`Falha ao buscar filmes populares (${res.status})`);
     }
 
-    const data = (await res.json()) as { results: PopularMovie[] };
-    return { results: data.results ?? [] };
-  }
-);
+    const json = (await res.json()) as PopularMoviesResponse;
+    return {
+      results: json.results ?? [],
+      page: json.page ?? data.page,
+      total_pages: json.total_pages ?? 1,
+      total_results: json.total_results ?? (json.results?.length ?? 0),
+    };
+  });

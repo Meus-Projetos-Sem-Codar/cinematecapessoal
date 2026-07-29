@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Film, LogOut, Star, TrendingUp, ArrowLeft } from "lucide-react";
+import { Film, LogOut, Star, TrendingUp, ArrowLeft, Loader2 } from "lucide-react";
 import { getPopularMovies, type PopularMovie } from "@/lib/tmdb.functions";
 
 export const Route = createFileRoute("/popular")({
@@ -39,11 +39,23 @@ function PopularPage() {
     navigate({ to: "/" });
   };
 
-  const { data, isLoading, error } = useQuery({
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ["popular-movies"],
-    queryFn: () => getPopularMovies(),
+    queryFn: ({ pageParam }) => getPopularMovies({ data: { page: pageParam } }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.total_pages ? lastPage.page + 1 : undefined,
     staleTime: 5 * 60_000,
   });
+
+  const movies = data?.pages.flatMap((p) => p.results) ?? [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,12 +113,38 @@ function PopularPage() {
           </div>
         )}
 
-        {data && (
-          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {data.results.map((movie) => (
-              <PopularCard key={movie.id} movie={movie} />
-            ))}
-          </div>
+        {movies.length > 0 && (
+          <>
+            <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {movies.map((movie) => (
+                <PopularCard key={movie.id} movie={movie} />
+              ))}
+            </div>
+
+            <div className="mt-10 flex flex-col items-center gap-3">
+              <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                {movies.length} filmes carregados
+              </p>
+              {hasNextPage ? (
+                <Button
+                  size="lg"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Carregando...
+                    </>
+                  ) : (
+                    "Carregar mais"
+                  )}
+                </Button>
+              ) : (
+                <p className="text-sm text-muted-foreground">Você chegou ao fim.</p>
+              )}
+            </div>
+          </>
         )}
       </main>
     </div>
