@@ -227,6 +227,21 @@ function PopularCard({ movie, authed }: { movie: PopularMovie; authed: boolean }
         <Badge variant="outline" className="border-border text-[10px] uppercase tracking-wider text-muted-foreground">
           {movie.vote_count.toLocaleString()} votos
         </Badge>
+        <Button
+          size="sm"
+          variant={saved ? "outline" : "default"}
+          className="w-full"
+          onClick={addToWatchlist}
+          disabled={saving || saved}
+        >
+          {saving ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
+          ) : saved ? (
+            <><Check className="mr-2 h-4 w-4" /> Na watchlist</>
+          ) : (
+            <><Plus className="mr-2 h-4 w-4" /> Quero assistir</>
+          )}
+        </Button>
       </div>
     </div>
   );
