@@ -11,7 +11,7 @@ type Props = {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   movie?: Movie | null;
-  onSave: (data: { title: string; year: number; poster: string; rating: number; categories: string[] }) => void;
+  onSave: (data: { title: string; year: number; poster: string; rating: number; categories: string[] }) => Promise<{ error?: string }> | void;
 };
 
 export function MovieFormDialog({ open, onOpenChange, movie, onSave }: Props) {
