@@ -20,6 +20,7 @@ export function MovieFormDialog({ open, onOpenChange, movie, onSave }: Props) {
   const [poster, setPoster] = useState("");
   const [rating, setRating] = useState<string>("");
   const [categories, setCategories] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -28,6 +29,7 @@ export function MovieFormDialog({ open, onOpenChange, movie, onSave }: Props) {
       setPoster(movie?.poster ?? "");
       setRating(movie ? String(movie.rating) : "");
       setCategories(movie?.categories ?? []);
+      setError(null);
     }
   }, [open, movie]);
 
@@ -35,12 +37,39 @@ export function MovieFormDialog({ open, onOpenChange, movie, onSave }: Props) {
     setCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
 
   const handleSave = () => {
-    if (!title.trim()) return;
+    const cleanTitle = title.trim();
+    if (!cleanTitle) return setError("Informe o título do filme.");
+    if (cleanTitle.length > 200) return setError("O título deve ter no máximo 200 caracteres.");
+
+    const parsedYear = Number(year);
+    const maxYear = new Date().getFullYear() + 10;
+    if (!Number.isInteger(parsedYear) || parsedYear < 1888 || parsedYear > maxYear) {
+      return setError(`Informe um ano entre 1888 e ${maxYear}.`);
+    }
+
+    const parsedRating = rating.trim() === "" ? 0 : Number(rating);
+    if (!Number.isFinite(parsedRating) || parsedRating < 0 || parsedRating > 10) {
+      return setError("A nota deve estar entre 0 e 10.");
+    }
+
+    const cleanPoster = poster.trim();
+    if (cleanPoster) {
+      let valid = false;
+      try {
+        const url = new URL(cleanPoster);
+        valid = url.protocol === "http:" || url.protocol === "https:";
+      } catch {
+        valid = false;
+      }
+      if (!valid) return setError("A URL do poster deve começar com http:// ou https://.");
+    }
+
+    setError(null);
     onSave({
-      title: title.trim(),
-      year: Number(year) || new Date().getFullYear(),
-      poster: poster.trim() || "https://placehold.co/500x750/1a1a1a/e85d3a?text=Sem+Poster",
-      rating: Math.max(0, Math.min(10, Number(rating) || 0)),
+      title: cleanTitle,
+      year: parsedYear,
+      poster: cleanPoster || "https://placehold.co/500x750/1a1a1a/e85d3a?text=Sem+Poster",
+      rating: parsedRating,
       categories,
     });
     onOpenChange(false);
@@ -100,6 +129,14 @@ export function MovieFormDialog({ open, onOpenChange, movie, onSave }: Props) {
             </div>
           </div>
         </div>
+
+        {error && (
+          <p className="text-sm text-destructive" role="alert">
+            {error}
+          </p>
+        )}
+
+
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
