@@ -196,6 +196,11 @@ function PopularCard({ movie, authed }: { movie: PopularMovie; authed: boolean }
     });
     setSaving(false);
     if (error) {
+      if (error.code === "23505") {
+        setSaved(true);
+        toast.info("Este filme já está na sua watchlist.");
+        return;
+      }
       toast.error("Não foi possível salvar o filme.");
       return;
     }
