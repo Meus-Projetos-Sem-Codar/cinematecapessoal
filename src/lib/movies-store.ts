@@ -46,6 +46,15 @@ function toMovie(r: Row): Movie {
   };
 }
 
+export type SaveResult = { error?: string };
+
+const DUPLICATE_MESSAGE = "Este filme já está na sua watchlist.";
+
+function describeError(error: { code?: string }): string {
+  if (error.code === "23505") return DUPLICATE_MESSAGE;
+  return "Não foi possível salvar o filme. Tente novamente.";
+}
+
 export function useMovies() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,11 +72,11 @@ export function useMovies() {
     refresh();
   }, []);
 
-  const add = async (m: Omit<Movie, "id" | "watched">) => {
+  const add = async (m: Omit<Movie, "id" | "watched">): Promise<SaveResult> => {
     const { data: userData } = await supabase.auth.getUser();
     const uid = userData.user?.id;
-    if (!uid) return;
-    await supabase.from("movies").insert({
+    if (!uid) return { error: "Sessão expirada. Entre novamente." };
+    const { error } = await supabase.from("movies").insert({
       user_id: uid,
       title: m.title,
       year: m.year,
@@ -75,11 +84,13 @@ export function useMovies() {
       rating: m.rating,
       categories: m.categories,
     });
+    if (error) return { error: describeError(error) };
     await refresh();
+    return {};
   };
 
-  const update = async (id: string, m: Partial<Movie>) => {
-    await supabase
+  const update = async (id: string, m: Partial<Movie>): Promise<SaveResult> => {
+    const { error } = await supabase
       .from("movies")
       .update({
         ...(m.title !== undefined && { title: m.title }),
@@ -90,7 +101,9 @@ export function useMovies() {
         ...(m.watched !== undefined && { watched: m.watched }),
       })
       .eq("id", id);
+    if (error) return { error: describeError(error) };
     await refresh();
+    return {};
   };
 
   const remove = async (id: string) => {
