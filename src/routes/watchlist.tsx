@@ -186,9 +186,9 @@ function WatchlistPage() {
         open={formOpen}
         onOpenChange={setFormOpen}
         movie={editing}
-        onSave={(data) => {
-          if (editing) update(editing.id, data);
-          else add(data);
+        onSave={async (data) => {
+          if (editing) return await update(editing.id, data);
+          return await add(data);
         }}
       />
 
