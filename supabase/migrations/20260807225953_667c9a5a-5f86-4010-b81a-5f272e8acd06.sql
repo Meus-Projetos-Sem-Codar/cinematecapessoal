@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX movies_user_title_year_unique ON public.movies (user_id, lower(btrim(title)), year);
