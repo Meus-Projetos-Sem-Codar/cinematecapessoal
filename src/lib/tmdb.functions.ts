@@ -40,7 +40,13 @@ export type MovieDetails = {
 };
 
 export const getMovieDetails = createServerFn({ method: "GET" })
-  .inputValidator((data: { id: number }) => ({ id: Number(data.id) }))
+  .inputValidator((data: { id: number }) => {
+    const id = Number(data?.id);
+    if (!Number.isInteger(id) || id < 1 || id > 100_000_000) {
+      throw new Error("ID de filme inválido");
+    }
+    return { id };
+  })
   .handler(async ({ data }): Promise<MovieDetails> => {
     const token = process.env.TMDB_BEARER_TOKEN;
     if (!token) throw new Error("TMDB_BEARER_TOKEN não configurado");

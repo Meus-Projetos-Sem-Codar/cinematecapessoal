@@ -20,6 +20,7 @@ export function MovieFormDialog({ open, onOpenChange, movie, onSave }: Props) {
   const [poster, setPoster] = useState("");
   const [rating, setRating] = useState<string>("");
   const [categories, setCategories] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
