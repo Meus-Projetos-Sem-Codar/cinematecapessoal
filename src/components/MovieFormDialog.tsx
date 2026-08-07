@@ -21,6 +21,7 @@ export function MovieFormDialog({ open, onOpenChange, movie, onSave }: Props) {
   const [rating, setRating] = useState<string>("");
   const [categories, setCategories] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -30,13 +31,14 @@ export function MovieFormDialog({ open, onOpenChange, movie, onSave }: Props) {
       setRating(movie ? String(movie.rating) : "");
       setCategories(movie?.categories ?? []);
       setError(null);
+      setSaving(false);
     }
   }, [open, movie]);
 
   const toggleCat = (c: string) =>
     setCategories((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const cleanTitle = title.trim();
     if (!cleanTitle) return setError("Informe o título do filme.");
     if (cleanTitle.length > 200) return setError("O título deve ter no máximo 200 caracteres.");
@@ -65,13 +67,19 @@ export function MovieFormDialog({ open, onOpenChange, movie, onSave }: Props) {
     }
 
     setError(null);
-    onSave({
+    setSaving(true);
+    const result = await onSave({
       title: cleanTitle,
       year: parsedYear,
       poster: cleanPoster || "https://placehold.co/500x750/1a1a1a/e85d3a?text=Sem+Poster",
       rating: parsedRating,
       categories,
     });
+    setSaving(false);
+    if (result?.error) {
+      setError(result.error);
+      return;
+    }
     onOpenChange(false);
   };
 
@@ -139,8 +147,8 @@ export function MovieFormDialog({ open, onOpenChange, movie, onSave }: Props) {
 
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSave} className="bg-primary text-primary-foreground hover:bg-primary/90">Salvar</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
+          <Button onClick={handleSave} disabled={saving} className="bg-primary text-primary-foreground hover:bg-primary/90">{saving ? "Salvando..." : "Salvar"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
