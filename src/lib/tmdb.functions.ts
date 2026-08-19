@@ -84,28 +84,25 @@ export const getPopularMovies = createServerFn({ method: "GET" })
     page: Math.min(Math.max(Number(data?.page ?? 1) || 1, 1), 500),
   }))
   .handler(async ({ data }): Promise<PopularMoviesResponse> => {
-    const token = process.env.TMDB_BEARER_TOKEN;
-    if (!token) throw new Error("TMDB_BEARER_TOKEN não configurado");
-
     const res = await fetch(
-      `https://api.themoviedb.org/3/movie/popular?language=en-US&page=${data.page}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          accept: "application/json",
-        },
-      }
+      `https://kamilla.app.n8n.cloud/webhook/tmdb?language=pt-BR&page=${data.page}`,
+      { method: "POST", headers: { accept: "application/json" } }
     );
 
     if (!res.ok) {
       throw new Error(`Falha ao buscar filmes populares (${res.status})`);
     }
 
-    const json = (await res.json()) as PopularMoviesResponse;
+    const raw = (await res.json()) as
+      | PopularMoviesResponse
+      | PopularMoviesResponse[];
+    const json = Array.isArray(raw) ? raw[0] : raw;
+
     return {
-      results: json.results ?? [],
-      page: json.page ?? data.page,
-      total_pages: json.total_pages ?? 1,
-      total_results: json.total_results ?? (json.results?.length ?? 0),
+      results: json?.results ?? [],
+      page: json?.page ?? data.page,
+      total_pages: json?.total_pages ?? 1,
+      total_results: json?.total_results ?? (json?.results?.length ?? 0),
     };
   });
+
