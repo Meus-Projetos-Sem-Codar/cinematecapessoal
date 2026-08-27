@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeader } from "@tanstack/react-start/server";
+
 
 export type PopularMovie = {
   id: number;
@@ -84,19 +86,33 @@ export const getPopularMovies = createServerFn({ method: "GET" })
     page: Math.min(Math.max(Number(data?.page ?? 1) || 1, 1), 500),
   }))
   .handler(async ({ data }): Promise<PopularMoviesResponse> => {
-    const res = await fetch(
-      `https://kamilla.app.n8n.cloud/webhook/tmdb?language=pt-BR&page=${data.page}`,
-      { method: "POST", headers: { accept: "application/json" } }
-    );
+    // Token do usuário logado (repassado pelo middleware do cliente)
+    const authHeader = getRequestHeader("authorization") ?? "";
+
+    const res = await fetch("https://postman-echo.com/post", {
+      method: "POST",
+      headers: {
+        ...(authHeader ? { Authorization: authHeader } : {}),
+        "Content-Type": "application/json",
+        accept: "application/json",
+      },
+      body: JSON.stringify({ name: "CineList", page: data.page, language: "pt-BR" }),
+    });
 
     if (!res.ok) {
       throw new Error(`Falha ao buscar filmes populares (${res.status})`);
     }
 
-    const raw = (await res.json()) as
+    const echo = (await res.json()) as {
+      json?: unknown;
+      data?: unknown;
+    };
+
+    const payload = (echo?.data ?? echo?.json) as
       | PopularMoviesResponse
-      | PopularMoviesResponse[];
-    const json = Array.isArray(raw) ? raw[0] : raw;
+      | PopularMoviesResponse[]
+      | undefined;
+    const json = Array.isArray(payload) ? payload[0] : payload;
 
     return {
       results: json?.results ?? [],
@@ -105,4 +121,5 @@ export const getPopularMovies = createServerFn({ method: "GET" })
       total_results: json?.total_results ?? (json?.results?.length ?? 0),
     };
   });
+
 
