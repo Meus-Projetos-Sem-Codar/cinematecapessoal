@@ -105,11 +105,20 @@ export const getPopularMovies = createServerFn({ method: "GET" })
       }
     );
 
+    const text = await res.text();
+
     if (!res.ok) {
-      throw new Error(`Falha ao buscar filmes populares (${res.status})`);
+      throw new Error(
+        `Falha ao buscar filmes populares (${res.status}): ${text.slice(0, 200)}`
+      );
     }
 
-    const raw = (await res.json()) as unknown;
+    let raw: unknown;
+    try {
+      raw = JSON.parse(text);
+    } catch {
+      throw new Error(`Resposta inválida da fonte de dados: ${text.slice(0, 200)}`);
+    }
 
     const unwrap = (value: unknown): PopularMoviesResponse | undefined => {
       if (!value) return undefined;
