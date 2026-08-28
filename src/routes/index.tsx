@@ -123,6 +123,15 @@ function HomePage() {
           </div>
         )}
 
+        {!isLoading && !error && movies.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-border bg-card/50 p-16 text-center">
+            <p className="font-display text-lg text-foreground">Nenhum filme retornado</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              A fonte de dados respondeu, mas não trouxe filmes. Tente novamente em instantes.
+            </p>
+          </div>
+        )}
+
         {movies.length > 0 && (
           <>
             <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
