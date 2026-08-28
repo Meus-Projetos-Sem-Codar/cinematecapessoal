@@ -88,31 +88,50 @@ export const getPopularMovies = createServerFn({ method: "GET" })
   .handler(async ({ data }): Promise<PopularMoviesResponse> => {
     // Token do usuário logado (repassado pelo middleware do cliente)
     const authHeader = getRequestHeader("authorization") ?? "";
-
-    const res = await fetch("https://postman-echo.com/post", {
-      method: "POST",
-      headers: {
-        ...(authHeader ? { Authorization: authHeader } : {}),
-        "Content-Type": "application/json",
-        accept: "application/json",
-      },
-      body: JSON.stringify({ name: "CineList", page: data.page, language: "pt-BR" }),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Falha ao buscar filmes populares (${res.status})`);
+    if (!authHeader) {
+      throw new Error("Entre na sua conta para ver os filmes populares.");
     }
 
-    const echo = (await res.json()) as {
-      json?: unknown;
-      data?: unknown;
+    const res = await fetch(
+      `https://kamilla.app.n8n.cloud/webhook/tmdb?language=pt-BR&page=${data.page}`,
+      {
+        method: "POST",
+        headers: {
+          ...(authHeader ? { Authorization: authHeader } : {}),
+          "Content-Type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify({ name: "CineList", page: data.page, language: "pt-BR" }),
+      }
+    );
+
+    const text = await res.text();
+
+    if (!res.ok) {
+      throw new Error(
+        `Falha ao buscar filmes populares (${res.status}): ${text.slice(0, 200)}`
+      );
+    }
+
+    let raw: unknown;
+    try {
+      raw = JSON.parse(text);
+    } catch {
+      throw new Error(`Resposta inválida da fonte de dados: ${text.slice(0, 200)}`);
+    }
+
+    const unwrap = (value: unknown): PopularMoviesResponse | undefined => {
+      if (!value) return undefined;
+      if (Array.isArray(value)) return unwrap(value[0]);
+      const obj = value as Record<string, unknown>;
+      if (Array.isArray(obj.results)) return obj as unknown as PopularMoviesResponse;
+      if (obj.data) return unwrap(obj.data);
+      if (obj.json) return unwrap(obj.json);
+      if (obj.body) return unwrap(obj.body);
+      return undefined;
     };
 
-    const payload = (echo?.data ?? echo?.json) as
-      | PopularMoviesResponse
-      | PopularMoviesResponse[]
-      | undefined;
-    const json = Array.isArray(payload) ? payload[0] : payload;
+    const json = unwrap(raw);
 
     return {
       results: json?.results ?? [],
