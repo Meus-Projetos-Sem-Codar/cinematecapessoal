@@ -89,15 +89,18 @@ export const getPopularMovies = createServerFn({ method: "GET" })
     // Token do usuário logado (repassado pelo middleware do cliente)
     const authHeader = getRequestHeader("authorization") ?? "";
 
-    const res = await fetch("https://postman-echo.com/post", {
-      method: "POST",
-      headers: {
-        ...(authHeader ? { Authorization: authHeader } : {}),
-        "Content-Type": "application/json",
-        accept: "application/json",
-      },
-      body: JSON.stringify({ name: "CineList", page: data.page, language: "pt-BR" }),
-    });
+    const res = await fetch(
+      `https://kamilla.app.n8n.cloud/webhook/tmdb?language=pt-BR&page=${data.page}`,
+      {
+        method: "POST",
+        headers: {
+          ...(authHeader ? { Authorization: authHeader } : {}),
+          "Content-Type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify({ name: "CineList", page: data.page, language: "pt-BR" }),
+      }
+    );
 
     if (!res.ok) {
       throw new Error(`Falha ao buscar filmes populares (${res.status})`);
