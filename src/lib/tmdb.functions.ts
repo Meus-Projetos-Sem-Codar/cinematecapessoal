@@ -88,6 +88,9 @@ export const getPopularMovies = createServerFn({ method: "GET" })
   .handler(async ({ data }): Promise<PopularMoviesResponse> => {
     // Token do usuário logado (repassado pelo middleware do cliente)
     const authHeader = getRequestHeader("authorization") ?? "";
+    if (!authHeader) {
+      throw new Error("Entre na sua conta para ver os filmes populares.");
+    }
 
     const res = await fetch(
       `https://kamilla.app.n8n.cloud/webhook/tmdb?language=pt-BR&page=${data.page}`,
