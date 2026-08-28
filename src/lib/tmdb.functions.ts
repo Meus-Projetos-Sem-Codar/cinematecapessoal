@@ -106,16 +106,20 @@ export const getPopularMovies = createServerFn({ method: "GET" })
       throw new Error(`Falha ao buscar filmes populares (${res.status})`);
     }
 
-    const echo = (await res.json()) as {
-      json?: unknown;
-      data?: unknown;
+    const raw = (await res.json()) as unknown;
+
+    const unwrap = (value: unknown): PopularMoviesResponse | undefined => {
+      if (!value) return undefined;
+      if (Array.isArray(value)) return unwrap(value[0]);
+      const obj = value as Record<string, unknown>;
+      if (Array.isArray(obj.results)) return obj as unknown as PopularMoviesResponse;
+      if (obj.data) return unwrap(obj.data);
+      if (obj.json) return unwrap(obj.json);
+      if (obj.body) return unwrap(obj.body);
+      return undefined;
     };
 
-    const payload = (echo?.data ?? echo?.json) as
-      | PopularMoviesResponse
-      | PopularMoviesResponse[]
-      | undefined;
-    const json = Array.isArray(payload) ? payload[0] : payload;
+    const json = unwrap(raw);
 
     return {
       results: json?.results ?? [],
