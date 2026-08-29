@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/react-start/server";
+
+
 
 
 export type PopularMovie = {
@@ -86,52 +87,24 @@ export const getPopularMovies = createServerFn({ method: "GET" })
     page: Math.min(Math.max(Number(data?.page ?? 1) || 1, 1), 500),
   }))
   .handler(async ({ data }): Promise<PopularMoviesResponse> => {
-    // Token do usuário logado (repassado pelo middleware do cliente)
-    const authHeader = getRequestHeader("authorization") ?? "";
-    if (!authHeader) {
-      throw new Error("Entre na sua conta para ver os filmes populares.");
-    }
+    const token = process.env.TMDB_BEARER_TOKEN;
+    if (!token) throw new Error("TMDB_BEARER_TOKEN não configurado");
 
     const res = await fetch(
-      `https://kamilla.app.n8n.cloud/webhook/tmdb?language=pt-BR&page=${data.page}`,
+      `https://api.themoviedb.org/3/movie/popular?language=pt-BR&page=${data.page}`,
       {
-        method: "POST",
         headers: {
-          ...(authHeader ? { Authorization: authHeader } : {}),
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
           accept: "application/json",
         },
-        body: JSON.stringify({ name: "CineList", page: data.page, language: "pt-BR" }),
       }
     );
 
-    const text = await res.text();
-
     if (!res.ok) {
-      throw new Error(
-        `Falha ao buscar filmes populares (${res.status}): ${text.slice(0, 200)}`
-      );
+      throw new Error(`Falha ao buscar filmes populares (${res.status})`);
     }
 
-    let raw: unknown;
-    try {
-      raw = JSON.parse(text);
-    } catch {
-      throw new Error(`Resposta inválida da fonte de dados: ${text.slice(0, 200)}`);
-    }
-
-    const unwrap = (value: unknown): PopularMoviesResponse | undefined => {
-      if (!value) return undefined;
-      if (Array.isArray(value)) return unwrap(value[0]);
-      const obj = value as Record<string, unknown>;
-      if (Array.isArray(obj.results)) return obj as unknown as PopularMoviesResponse;
-      if (obj.data) return unwrap(obj.data);
-      if (obj.json) return unwrap(obj.json);
-      if (obj.body) return unwrap(obj.body);
-      return undefined;
-    };
-
-    const json = unwrap(raw);
+    const json = (await res.json()) as PopularMoviesResponse;
 
     return {
       results: json?.results ?? [],
